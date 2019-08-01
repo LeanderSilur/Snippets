@@ -2,7 +2,7 @@
 
 This python script contains a class representing a cubic bezier curve.
 
-The class showcases a method to find a point on the bezier curve which is closest to a given point. For other methods, look at [this stackoverflow thread](https://stackoverflow.com/q/2742610/6879283).
+The class showcases a method to find a point on the bezier curve which is closest to a given point. The script is referenced in [this answer](https://stackoverflow.com/a/57315396/6879283), for other methods, look at [this stackoverflow thread](https://stackoverflow.com/q/2742610/6879283).
 The file also contains an example.
 
 ![example](example.png)
