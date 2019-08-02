@@ -30,12 +30,10 @@ class Bezier(object):
     # The coefficients have the same dimensions as the control
     # points.
     def create_coefficients(self):
-        points = self.points
-        a = - points[0] + 3*points[1] - 3*points[2] + points[3]
-        b = 3*points[0] - 6*points[1] + 3*points[2]
-        c = -3*points[0] + 3*points[1]
-        d = points[0]
-        self.coeffs = np.stack([a, b, c, d]).reshape(-1, 4, 2)
+        co_coeffs = np.array([[-1, 3, -3, 1], [3, -6, 3, 0], [-3, 3, 0, 0], [1, 0, 0, 0]], dtype=np.float32)
+        coeffs = np.multiply(co_coeffs.reshape((4, 4, 1)), points.reshape((1, 4, 2)))
+        self.coeffs = np.sum(coeffs, axis=1).reshape(-1, 4, 2)
+
 
     # Return a point on the curve at the parameter t.
     def at(self, t):
