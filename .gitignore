@@ -1,1 +1,3 @@
 ignore
+backup.blend
+*.blend[0-9]*
