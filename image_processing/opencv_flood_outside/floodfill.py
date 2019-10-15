@@ -6,8 +6,8 @@ THRESHOLD = 50/255
 DILATE = 5
 BLUR = 3
 
-IN_DIR = "D:/code_snippets/image_opencv_single_color/in"
-OUT_DIR = "D:/code_snippets/image_opencv_single_color/out"
+IN_DIR = "D:/path/in"
+OUT_DIR = "D:/path/out"
 
 
 def alpha_over(a, b, fac = 1):
