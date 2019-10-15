@@ -1,0 +1,492 @@
+\documentclass{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% PYTHON	
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{setspace}
+\lstset{ 
+basicstyle=\tiny,
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{green},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stringstyle=\color{cyan},     % string literal style
+  tabsize=2,	                   % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+
+
+
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{comment}
+
+\title{Spherical Pendulum with Python}
+\author{Arun Leander}
+\date{2019}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Introduction}
+
+Simulate a spherical pendulum with python.
+
+\section {Equations}
+
+The spherical pendulums position can be described with two coordinates. $\theta$ is the angle in a plane which includes the Z-axis and $\phi$ is the angle on the plane perpendicular to the Z-axis. With $l$ as the length of the pendulum, the position in cartesian coordinates is
+
+\begin{align}
+x& = l \sin{\theta} \cos{\phi}                 \\
+y& = l \sin{\theta} \sin{\phi}                 \\
+z& = -l \cos{\theta}                                
+\end{align}
+
+
+The energies.
+
+\begin{align}
+E_{kin} &= T = \frac{1}{2} mv^2                 \\
+E_{pot} &= V = mgh
+\end{align}
+
+The Lagrangian.
+\begin{equation}
+L = T - V
+\end{equation}
+
+To calculate the kinetic energy $T$, I have to replace $v^2$.
+
+\begin{equation}
+v^2 =   \dot{x}^2 + \dot{y}^2 + \dot{z}^2    
+\end{equation}
+
+
+\subsection{Velocity}
+\label{ssec:velocity}
+
+$v^2$ can be written using $\theta$ and $\phi$ only. This requires the derivates in respect to the change of time $t$.
+
+% x
+\begin{align}
+\begin{split}
+\dot{x}^2& = (\frac{\partial x}{\partial t})^2			\\
+& = (\frac{\partial }{\partial t} l \sin{\theta} \cos{\phi})^2	\\
+& = l^2(\sin{\theta} (-\sin{\phi}) \dot{\phi} + \cos{\theta}\cos{\phi} \dot{\theta})^2				\\
+& = l^2 [
+	\sin^2\theta \sin^2 \phi \dot{\phi}^2 + 
+	\cos^2\theta \cos^2\phi \dot{\theta}^2 -
+	2 \sin\theta\cos\theta\dot{\theta}\sin{\phi}\cos\phi\dot{\phi}
+	]
+%y 
+\end{split}
+\\
+\begin{split}
+\dot{y}^2& = (\frac{\partial y}{\partial t})^2			\\
+& = (\frac{\partial }{\partial t} l \sin{\theta} \sin{\phi})^2	\\
+& = l^2(\sin{\theta} \cos\phi \dot{\phi} + \cos\theta\sin{\phi} \dot{\theta})^2				\\
+& = l^2 [
+	\sin^2\theta \cos^2 \phi \dot\phi^2 + 
+	\cos^2\theta \sin^2\phi \dot{\theta}^2 + 
+	2 \sin{\theta} \cos\theta \dot{\theta} \sin{\phi}\cos\phi \dot{\phi}
+	]
+\end{split}
+\\
+%z
+\begin{split}
+\dot{z}^2& = (\frac{\partial z}{\partial t})^2			\\
+& = (\frac{\partial }{\partial t} - l\cos{\theta} )^2	\\
+& = l^2 ( \sin^2\theta \dot{\theta}^2 )
+\end{split}
+\end{align}
+
+\begin{align}
+%x+y+z
+\begin{split}
+\frac{v^2}{l^2}& = (\sin^2\theta \sin^2 \phi \dot{\phi}^2 + 
+	\cos^2\theta \cos^2\phi \dot{\theta}^2 -
+	2 \sin\theta\cos\theta\dot{\theta}\sin{\phi}\cos\phi\dot{\phi})\\
+&\phantom{{}={}} + (\sin^2\theta \cos^2 \phi \dot\phi^2 + 
+	\cos^2\theta \sin^2\phi \dot{\theta}^2 + 
+	2 \sin{\theta} \cos\theta \dot{\theta} \sin{\phi}\cos\phi \dot{\phi} ) \\
+&\phantom{{}={}} +	\sin^2\theta \dot{\theta}^2
+\end{split}
+\\
+\begin{split}
+\frac{v^2}{l^2}& = \sin^2\theta \sin^2 \phi \dot{\phi}^2 + \sin^2\theta \cos^2 \phi \dot\phi^2 \\
+&\phantom{{}={}} + \cos^2\theta \cos^2\phi \dot{\theta}^2 +\cos^2\theta \sin^2\phi \dot{\theta}^2  \\
+&\phantom{{}={}} +	\sin^2\theta \dot{\theta}^2
+\end{split}
+\\
+\begin{split}
+\frac{v^2}{l^2}& = \sin^2\theta \dot{\phi}^2 (\sin^2 \phi +\cos^2 \phi) + \cos^2\theta \dot{\theta}^2 (\cos^2\phi + \sin^2\phi) \\
+&\phantom{{}={}} +	\sin^2\theta \dot{\theta}^2
+\end{split}
+\\
+\begin{split}
+\frac{v^2}{l^2}& = \sin^2\theta \dot{\phi}^2 + (\cos^2\theta + \sin^2\theta) \dot{\theta}^2
+\end{split}
+\\
+\begin{split}
+v^2& = l^2 (\sin^2\theta \dot{\phi}^2 + \dot{\theta}^2)
+\end{split}
+\end{align}
+
+Now the energies and the lagrangian can be written using $\theta$ and $\phi$.
+
+\begin{align}
+T& = \frac{1}{2} m l^2 (\sin^2\theta \dot{\phi}^2 + \dot{\theta}^2)               \\
+V_g& = - m g l \cos\theta								\\
+V_f& = m l (f_z \cos\theta - (f_x \cos\phi + f_y sin(\phi)) \sin(\theta))								              \\
+L& = \frac{1}{2} m  l^2 (\sin^2\theta \dot{\phi}^2 + \dot{\theta}^2) + m g l \cos\theta	    \\
+L_f& = \frac{1}{2} m  l^2 (\sin^2\theta \dot{\phi}^2 + \dot{\theta}^2) - m l (f_z \cos\theta - (f_x \cos\phi + f_y sin(\phi)) \sin(\theta))
+\end{align}
+
+I inserted a generalized force $f$. For gravity use $f = \left(\begin{smallmatrix}0\\0\\-10\end{smallmatrix}\right)$.
+
+\subsection {Relative Velocity}
+\label{ssec:rvelocity}
+The velocity relative to a moving system can be expressed with $v_w = v - w$ where $w$ is the velocity of the system.
+
+\begin{align}
+  {v_w}^2& = (\dot{x} - w_x)^2 + (\dot{y} - w_y)^2 + (\dot{z} - w_z)^2 \\
+  \begin{split}
+  {v_w}^2 &= 
+      (-l \sin{\theta} \sin{\phi} \dot{\phi} + l \cos{\theta}\cos{\phi} \dot{\theta} - w_x)^2 
+      \\ &\qquad + (l \sin{\theta} \cos\phi \dot{\phi} + l \cos\theta\sin{\phi} \dot{\theta} - w_y)^2
+    + (l \sin\theta \dot{\theta} - w_z)^2 
+  \end{split}
+\end{align}
+
+
+
+
+
+
+
+
+\subsection{Second Lagrange Equation}
+
+The second Lagrange equation for each coordinate $q_i$ is
+\begin{equation}
+\frac{\partial }{\partial t} \frac{\partial L}{\partial \dot{q}_i} - \frac{\partial L}{\partial q_i} = 0
+\end{equation}
+
+Insert the friction.
+\begin{equation}
+\frac{\partial }{\partial t} \frac{\partial L}{\partial \dot{q}_i}
+- \frac{\partial L}{\partial q_i}
++ \frac{\partial C}{\partial \dot{q}_i}
+= 0
+\end{equation}
+
+Solve it for $\ddot{\theta}$ and $\ddot{\phi}$.
+\begin{equation}
+\begin{split}
+0& = \frac{\partial }{\partial t} \frac{\partial L}{\partial \dot{\theta}} - \frac{\partial L}{\partial \theta} + \frac{\partial C}{\partial \dot{q}_i}	\\
+& = \frac{\partial }{\partial t} ( \frac{1}{2} m  l^2 2 \dot{\theta}) 
+ - [
+      \frac{1}{2} m  l^2 2 \sin\theta \cos\theta \dot{\phi}^2 
+      - ml ( -f_z \sin\theta + (f_x\cos\phi-f_y\sin(-\phi))(-\cos(\theta))  )
+    ]
+    + \frac{\partial C}{\partial \dot{q}_i}					\\
+%
+& =  m  l^2 \ddot{\theta} 
+ - m  l^2 \sin\theta \cos\theta \dot{\phi}^2 - m l f_z \sin\theta - ml(f_x\cos\phi - f_y\sin(-\phi))\cos\theta
+ + \frac{\partial C}{\partial \dot{q}_i}											\\
+%
+& =  \ddot{\theta} 
+- \sin\theta \cos\theta \dot{\phi}^2 - \frac{\sin\theta}{l} f_z - \frac{\cos\theta}{l}(f_x\cos\phi - f_y\sin(-\phi))
++ \frac{1}{ml^2}\frac{\partial C}{\partial \dot{q}_i}        \\
+%
+\ddot{\theta}& = \frac{\sin(2\theta)}{2} \dot{\phi}^2 
++ \frac{\sin\theta}{l} f_z + \frac{\cos\theta}{l}(f_x\cos\phi - f_y\sin(-\phi))
+- \frac{1}{ml^2}\frac{\partial C}{\partial \dot{q}_i}
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+0& = \frac{\partial }{\partial t} \frac{\partial L}{\partial \dot{\phi}} - \frac{\partial L}{\partial \phi} + \frac{\partial C}{\partial \dot{\phi}}	\\
+& = \frac{\partial }{\partial t} ( m  l^2 \sin^2\theta \dot{\phi}) 
+- (-1) m l (-f_x \sin\phi + f_y \cos(\phi)) \sin(-\theta)
++ \frac{\partial C}{\partial \dot{\phi}}								\\
+%
+& = m  l^2(\sin^2\theta \ddot{\phi} + 2 \sin\theta \cos\theta \dot{\theta} \dot{\phi})
++ml (-f_x\sin\phi + f_y \cos(\phi)) \sin(-\theta)
++ \frac{\partial C}{\partial \dot{\phi}}	\\
+%
+& = \ddot{\phi} + 2\frac{\cos\theta}{\sin\theta} \dot{\theta} \dot{\phi}
++ \frac{\sin(-\theta)}{l}(-f_x\sin\phi + f_y \cos\phi)
++ \frac{1}{ml^2\sin^2\theta}\frac{\partial C}{\partial \dot{\phi}}		\\
+\ddot{\phi}& = - 2\cot{\theta} \dot{\theta} \dot{\phi} 
++ \frac{\sin(\theta)}{l}(-f_x\sin\phi + f_y \cos\phi)
+- \frac{1}{ml^2\sin^2\theta}\frac{\partial C}{\partial \dot{\phi}}
+\end{split}
+\end{equation}
+
+
+
+
+%% MAIN EQUATIONS DONE
+
+\section{Friction and Drag}
+
+The non generalized \emph{angular} friction power $C_A$ and \emph{drag} friction power $C_D$ are as follows.
+For the drag, I will pretend the the surface $A$ and the density $p$ (through volume) is proportional to $l$. The extra components are included in the drag coefficient $c_d$. While the velocity for $C_A$ can be described only through $\theta$ and $\phi$, $C_D$ depends on the velocity of the system and has to include the wind speed.
+
+\begin{align}
+  \begin{split}
+  C_A &= \frac{1}{2} c_a v^2							                              \\
+  C_A &= \frac{1}{2} c_a l^2 (\sin^2\theta \dot{\phi}^2 + \dot{\theta}^2)
+  \end{split}
+  \\
+  \begin{split}
+  C_D &= \frac{1}{2} c_{d0} p A (v - w)^3    							            \\
+  C_D &= \frac{1}{2} c_{d} \frac{m}{l} l (|v - w|)^3                               \\
+  C_D &= \frac{1}{2} c_{d} m l^3 (\frac{{v_w}^2}{l^2})^{\frac{3}{2}}                              \\
+  \end{split}
+\end{align}
+
+
+\subsection{Derivates of the frictions for the main equation}
+\subsubsection{Angular Friction}
+\begin{align}
+  \frac{\partial C_A}{\partial \dot{\theta}} &= c_a l^2 \dot{\theta} 	\\
+  \frac{\partial C_A}{\partial \dot{\phi}}   &= c_a l^2 \sin^2\theta\dot{\phi} \\
+\end{align}
+
+\subsubsection{Drag}
+
+${v_w}^2$ has to be inserted, see \hyperref[ssec:rvelocity]{this previous section (click)}.
+\begin{align}
+  \begin{split}
+  \frac{\partial C_D}{\partial \dot{\theta}}   &=\frac{\partial }{\partial \dot{\theta}} \frac{1}{2} c_{d} m ({v_w}^2)^{\frac{3}{2}}      \\
+  & = \frac{3}{4} c_{d} m
+  (\frac{{v_w}^2}{l^2})^\frac{1}{2}
+  (2 l \cos\theta \cos\phi (l \dot{\theta} \cos\theta \cos\phi - l \dot{\phi} \sin\theta \sin\phi - x_w)
+  \\&\phantom{{}={}}+ 2 l \cos\theta  \sin\phi (l \dot{\theta} \cos\theta \sin\phi +l \dot{\phi} \sin\theta \cos\phi - y_w)
+  + 2 l \sin\theta (l \dot{\theta} \sin\theta - z_w))
+  \end{split}
+  \\
+  \begin{split}
+  \frac{\partial C_D}{\partial \dot{\phi}}   
+  & = \frac{1}{2} c_{d} m \frac{\partial (\frac{{v_w}^2}{l^2})^{\frac{3}{2}} }{\partial \dot{\phi}} \\
+  & = \frac{3}{4} c_{d} m
+  (\frac{{v_w}^2}{l^2})^\frac{1}{2}                    
+  \\&\phantom{{}={}}(2 l \sin\theta (l \dot{\phi} \sin\theta (\sin^2\phi + \cos^2\phi + x_w \sin\phi - y_w \cos\phi)))
+\end{split}
+\end{align}
+
+
+
+
+
+
+
+
+\section{Multiple Segments}
+
+Here is an attempt to generalize the equation to compute the motion of multiple pendulums concatenated.
+
+\begin{align}
+  \begin{split}
+    x& = l \sin{\theta} \cos{\phi}\\
+    y& = l \sin{\theta} \sin{\phi}\\
+    z& = -l \cos{\theta}\\
+  \end{split}
+  \begin{split}
+    \dot{x}& = -l\sin{\theta} \sin{\phi} \dot{\phi} + l\cos{\theta}\cos{\phi} \dot{\theta}\\
+    \dot{y}& = l\sin{\theta} \cos\phi \dot{\phi} + l\cos\theta\sin{\phi} \dot{\theta}\\
+    \dot{z}& = l\sin\theta \dot{\theta}
+  \end{split}
+\end{align}
+
+Some partial derivates.
+
+\begin{align}
+  \begin{split}
+    \frac{\partial x}{\partial \theta}& = x_{n\theta} = l \cos{\theta} \cos{\phi} \\
+    \frac{\partial y}{\partial \theta}& = y_{n\theta} = l \cos{\theta} \sin{\phi} \\
+    \frac{\partial z}{\partial \theta}& = z_{n\theta} = l \sin{\theta}
+  \end{split}
+  \\
+  \begin{split}
+    \frac{\partial \dot{x}}{\partial t} & = \dot{x}_{t}
+      = - l\cos{\theta} \sin{\phi} \dot{\theta} \dot{\phi}
+      - l\sin{\theta} \cos{\phi} \dot{\phi}^2
+      - l\sin{\theta} \sin{\phi} \ddot{\phi}
+      \\&\phantom{{}=xn={}}- l\cos{\theta}\sin{\phi} \dot{\theta} \dot{\phi}
+      - l\sin{\theta}\cos{\phi} \dot{\theta}^2
+      + l\cos{\theta}\cos{\phi} \ddot{\theta}
+    \\
+    \frac{\partial \dot{y}}{\partial t} & = \dot{y}_{t}
+      = l\cos{\theta} \cos\phi \dot{\theta} \dot{\phi}
+      - l\sin{\theta} \sin\phi \dot{\phi}^2
+      + l\sin{\theta} \cos\phi \ddot{\phi}
+      \\&\phantom{{}=xn={}}
+      + l\cos\theta\cos{\phi} \dot{\theta} \dot{\phi}
+      - l\sin\theta\sin{\phi} \dot{\theta}^2
+      - l\cos\theta\sin{\phi} \ddot{\theta}
+    \\
+    \frac{\partial \dot{z}}{\partial t} & = \dot{z}_{t}
+      = l\cos\theta \dot{\theta}^2 + l\sin\theta \ddot{\theta}
+  \end{split}
+  \\
+  \begin{split}
+    \frac{\partial \dot{x}}{\partial \dot{\theta}}& = \dot{x}_{\dot{\theta}} 
+      = l\cos{\theta}\cos{\phi} \\
+    \frac{\partial \dot{y}}{\partial \dot{\theta}}& = \dot{y}_{\dot{\theta}} 
+      = l\cos\theta\sin{\phi}\\
+    \frac{\partial \dot{z}}{\partial \dot{\theta}}& = \dot{z}_{\dot{\theta}} 
+      = l\sin\theta
+  \end{split}
+  \\
+  \begin{split}
+    \frac{\partial}{\partial t}\frac{\partial \dot{x}}{\partial \dot{\theta}}& = \dot{x}_{\dot{\theta}t} 
+      = -l\sin{\theta}\cos{\phi} \dot{\theta} - l\cos{\theta}\sin{\phi}  \dot{\phi}\\
+      \frac{\partial}{\partial t}\frac{\partial \dot{y}}{\partial \dot{\theta}}& = \dot{y}_{\dot{\theta}t} 
+      = -l\sin{\theta}\sin{\phi} \dot{\theta} + l\cos{\theta}\cos{\phi}  \dot{\phi}\\
+      \frac{\partial}{\partial t}\frac{\partial \dot{z}}{\partial \dot{\theta}}& = \dot{z}_{\dot{\theta}t} 
+      = l\cos\theta \dot{\theta}
+  \end{split}
+\end{align}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{comment}
+  
+\begin{split}
+  \frac{\partial x_n}{\partial \phi_n}& = x_{n\phi}  = l_n \sin{\theta_n} \sin{\phi_n} \phi_n\\
+  \frac{\partial y_n}{\partial \phi_n}& = y_{n\phi}  = l_n \sin{\theta_n} \cos{\phi_n} \phi_n\\
+  \frac{\partial z_n}{\partial \phi_n}& = z_{n\phi}  = 0
+\end{split}
+\begin{split}
+  \frac{\partial \dot{x}_n}{\partial \phi_n}& = \dot{x}_{n\phi} 
+    = -l_n\sin{\theta_n} \cos{\phi_n} \dot{\phi}_n - l_n\cos{\theta_n}\sin{\phi_n} \dot{\theta}_n\\
+  \frac{\partial \dot{y}_n}{\partial \phi_n}& = \dot{y}_{n\phi} 
+    = -l_n\sin{\theta_n} \sin\phi_n \dot{\phi}_n + l_n\cos\theta_n\cos{\phi_n} \dot{\theta}_n\\
+  \frac{\partial \dot{z}_n}{\partial \phi_n}& = \dot{z}_{n\phi} 
+    = 0
+\end{split}
+\begin{split}
+  \frac{\partial \dot{x}_n}{\partial \dot{\phi}}& = \dot{x}_{n\dot{\phi_n}} 
+    = -l_n\sin{\theta_n} \sin{\phi_n} \\
+  \frac{\partial \dot{y}_n}{\partial \dot{\phi}}& = \dot{y}_{n\dot{\phi_n}} 
+    = l_n\sin{\theta_n} \cos\phi_n\\
+  \frac{\partial \dot{z}_n}{\partial \dot{\phi}}& = \dot{z}_{n\dot{\phi_n}} 
+    = 0
+\end{split}
+\end{comment}
+
+
+
+
+The updated lagrangian.
+
+\begin{align}
+  \begin{split}
+    T &= \frac{1}{2} m v^2                 \\
+    &= \frac{1}{2} ((\sqrt{m}\dot{x})^2 + (\sqrt{m}\dot{y})^2 + (\sqrt{m}\dot{z})^2)                 \\
+    &= \frac{1}{2} ((\sqrt{m_a}\dot{x}_a + \sqrt{m_b}\dot{x}_b \dots)^2 + (\sqrt{m_a}\dot{y}_a + \sqrt{m_b}\dot{y}_b \dots)^2 + (\sqrt{m_a}\dot{z}_a + \sqrt{m_b}\dot{z}_b \dots)^2)       
+  \end{split} \\
+  \begin{split}
+    V &= -(((m_a + m_b) x_a + m_b x_b) x_f) + ((m_a + m_b) y_a + m_b y_b) y_f) + ((m_a + m_b) z_a + m_b x_b) z_f))
+  \end{split}
+\end{align}
+
+\begin{align}
+  \begin{split}
+    L &= \frac{1}{2} (m_a\dot{x}_a^2 + 2 \sqrt{m_a + m_b} \dot{x}_a \dot{x}_b + m_b\dot{x}_b^2 
+    +m_a\dot{y}_a^2 + 2 \sqrt{m_a + m_b} \dot{y}_a \dot{y}_b + m_b\dot{y}_b^2
+    \\&\phantom{{}=\frac{1}{2} (}+m_a\dot{z}_a^2 + 2 \sqrt{m_a + m_b} \dot{z}_a \dot{z}_b + m_b\dot{z}_b^2)
+    \\&\phantom{{}={}}+ ((m_a + m_b) x_a + m_b x_b) x_f + ((m_a + m_b) y_a + m_b y_b) y_f + ((m_a + m_b) z_a + m_b x_b) z_f
+  \end{split}
+\end{align}
+
+For the topmost $\theta$ and $\phi$, this will result in.
+
+\begin{align}
+\frac{\partial }{\partial t} \frac{\partial L}{\partial \dot{q}_i} - \frac{\partial L}{\partial q_i} = 0
+\end{align}
+
+
+
+
+
+
+
+
+
+
+
+
+\section {Numpy ODE}
+
+By entering $\theta$, $\dot{\theta}$, $\phi$ and $\dot{\phi}$ into an ODE, they motion can be solved numerically.
+
+\begin{lstlisting}[language=Python]
+
+def pend(y, t, mass, gravity, L, c):
+    theta, d_theta, phi, d_phi = y
+    dydt = [d_theta,
+            np.square(d_phi) * np.sin(theta) * np.cos(theta) - gravity/L * np.sin(theta) - c/mass * d_phi,
+            d_phi,
+            (-2) * d_theta * d_phi / np.tan(theta) - c/mass * d_phi
+            ]
+    return dydt
+
+mass = 10
+gravity = 10
+L = 0.2
+friction = 8
+
+# intial values
+y0 = [np.pi/2.5, 0.0, 0.0, 4]
+
+# time values
+t = np.linspace(0, 20, 400)
+
+# create the solver
+sol = scipy.integrate.odeint(pend, y0, t, args=(mass, gravity, L, friction))
+\end{lstlisting}
+
+\newpage
+\tableofcontents
+\end{document}
+
+

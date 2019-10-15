@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="author" content="Leander">
+  <meta name="description" content="Pendulum Sim">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <canvas id="canvas" width="500" height="500">
+        <!-- Insert fallback content here -->
+        Sorry, your browser doesn't support canvas technology.
+    </canvas>
+
+    <div id="controls"></div>
+
+    <script src="jodex.js"></script>
+    <script src="fps.js"></script>
+    <script src="geometry.js"></script>
+    <script src="pendulum_chain.js"></script>
+    <script src="slider.js"></script>
+<script>
+
+let scene = new Scene(document.getElementById('canvas'));
+
+let ax_size = 0.2;
+let xAxis = new Line();
+xAxis.start.x = -ax_size;
+xAxis.end.x = ax_size;
+xAxis.color = "rgba(255, 100, 100, 0.4)";
+let yAxis = new Line();
+yAxis.start.y = -ax_size;
+yAxis.end.y = ax_size;
+yAxis.color = "rgba(100, 255, 100, 0.4)";
+let zAxis = new Line();
+zAxis.end.z = 0.5;
+zAxis.color = "rgba(100, 100, 255, 0.4)";
+
+scene.addItem(xAxis);
+scene.addItem(yAxis);
+scene.addItem(zAxis);
+scene.addItem(new FPS());
+
+
+let grid = new GridFloor(0.4, 4);
+scene.addItem(grid);
+
+let pendulum = new Pendulum();
+scene.addItem(pendulum);
+scene.addDraggable(pendulum.segments[0].base);
+
+
+new Slider(CAMERA, "focal");
+new Slider(pendulum, "c_a");
+new Slider(pendulum, "c_d");
+new Slider(pendulum.wind, "x");
+new Slider(pendulum.wind, "y");
+new Slider(pendulum.wind, "z");
+new Slider(pendulum, "time_step");
+new Slider(pendulum, "debug");
+
+
+
+function drawFrame() {
+    pendulum.step();
+    SLDRS.grab();
+    scene.draw();
+}
+
+
+
+
+window.requestAnimFrame = (function(){
+return  window.requestAnimationFrame       ||
+      window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame    ||
+      function( callback ){
+        window.setTimeout(callback, 1000 / 60);
+      };
+})();
+
+(function animloop(){
+requestAnimFrame(animloop);
+drawFrame();
+})();
+
+</script>
+
+
+
+
+</body>
+</html>
