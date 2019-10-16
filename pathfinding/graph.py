@@ -1,4 +1,7 @@
-#from Vector import Vector, Line, Triangle
+import sys
+sys.path.append("D:/code_snippets/Snippets/pathfinding")
+from vector import Vector, Line, Triangle
+
 
 class Vertex(object):
     def __init__(self, position, id=0):

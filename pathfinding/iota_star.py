@@ -5,12 +5,10 @@ import mathutils
 import math
 import time
 
-sys.path.append(r'D:\code_snippets\Snippets\pathfinding')
-
-import vector
+import sys
+sys.path.append("D:/code_snippets/Snippets/pathfinding")
+from vector import Vector
 import graph as IOTA
-import importlib
-importlib.reload(IOTA)
 
 def vis_path(path):
     bm = bmesh.new()
@@ -177,7 +175,7 @@ def create_graph():
     bm = bmesh.new()
     bm.from_mesh(bpy.data.objects['knots'].data)
     for v in bm.verts:
-        g.add_vertex(tuple(v.co))
+        g.add_vertex(Vector(*v.co))
 
     for e in bm.edges:
         v1 = e.verts[0]
@@ -219,10 +217,9 @@ def update(context):
     
     vis_path(path)
 
-def register():
-    update(bpy.context)
-    bpy.app.handlers.depsgraph_update_post.append(update)
 
-def unregister():
-    for h in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.remove(h)
+for h in bpy.app.handlers.depsgraph_update_post:
+    bpy.app.handlers.depsgraph_update_post.remove(h)
+
+update(bpy.context)
+bpy.app.handlers.depsgraph_update_post.append(update)
