@@ -4,7 +4,7 @@ import bmesh
 import mathutils
 import math
 import time
-
+import graph as IOTA
 
 def vis_path(path):
     bm = bmesh.new()
@@ -24,15 +24,6 @@ def vis_path(path):
     bm.to_mesh(ob.data)
     bm.free()
     
-
-def closest_node(g, pos):
-    node, dist = g[0], sys.maxsize
-    for v in g:
-        ndist = (mathutils.Vector(v.position)-pos).length
-        if (ndist < dist):
-            dist = ndist
-            node = v
-    return node
 
 
 def reconstruct_path(v):
@@ -126,34 +117,6 @@ def iota_star(start, target):
             print("   ", v, v.previous,  "{:.2f}".format(v.g), "{:.2f}".format(v.f))
     return None
 
-def update_vertex(currentNode, edge, neighbour, openList, target):
-    if line_of_sight(currentNode.previous, neighbour):
-        # If there is line-of-sight between parent(s) and neighbour
-        # then ignore s and use the path from parent(s) to neighbour
-        
-        # Have to redefine the distance
-        parent_dist = currentNode.previous.distance2d(neighbour)
-        if currentNode.previous.g + parent_dist < neighbour.g:
-            neighbour.g = currentNode.previous.g + parent_dist
-            neighbour.previous = currentNode.previous
-            if neighbour not in openList:
-                neighbour.calc_h(target)
-            neighbour.f = neighbour.g + neighbour.h
-            if neighbour not in openList:
-                openList.append(neighbour)
-    else:
-        # If the length of the path from start to s and from s to 
-        # neighbour is shorter than the shortest currently known distance
-        # from start to neighbour, then update node with the new distance
-        if currentNode.g + edge.weight < neighbour.g:
-            neighbour.previous = currentNode
-            neighbour.g  = currentNode.g + edge.weight
-            if neighbour not in openList:
-                neighbour.calc_h(target)
-            neighbour.f = neighbour.g + neighbour.h
-            if neighbour not in openList:
-                openList.append(neighbour)
-
 def line_of_sight(a, b):
     edge1 = None
     for edge in a.edges:
@@ -205,7 +168,7 @@ def get_collision_from_edge(edge, start, target):
 
 
 def create_graph():
-    g = Graph()
+    g = IOTA.Graph()
 
     bm = bmesh.new()
     bm.from_mesh(bpy.data.objects['knots'].data)
@@ -234,7 +197,7 @@ def create_graph():
     
 
 # Create graph once.
-    
+
 def update(context):
     g = create_graph()
     print("________")

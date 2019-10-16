@@ -4,6 +4,9 @@ class Vector(object):
         self.y = y
         self.z = z
     
+    def clone(self):
+        return Vector(self.x, self.y, self.z)
+
     def __iter__(self):
         return iter((self.x, self.y, self.z))
 
@@ -65,5 +68,55 @@ class Vector(object):
     def length(self):
         return (self.x * self.x + self.y * self.y + self.z * self.z) ** 0.5
 
+    def length2(self):
+        return (self.x * self.x + self.y * self.y + self.z * self.z)
+
+    def length2d(self):
+        return (self.x * self.x + self.y * self.y) ** 0.5
+
     def angle2d(self):
         return math.atan2(self.y, self.x)
+    
+    def normalize(self):
+        length = self.length()
+        self.x /= length
+        self.y /= length
+        self.z /= length
+
+class Line(object):
+    def __init__(self, a, b):
+        assert isinstance(a, Vector) and isinstance(b, Vector)
+        self.a = a
+        self.b = b
+    def closest_point(self, p):
+        ap = p - self.a
+        ab = p - self.b
+        t = ap.dot(ab) / ab.length2()
+        t = min(1, max(0, t))
+        return self.a + ab * t
+
+class Triangle(object):
+    def __init__(self, a, b, c):
+        assert isinstance(a, Vector) and isinstance(b, Vector) and isinstance(c, Vector)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    # returns tuple: (position)
+    def closest_point(self, p):
+        a, b, c = self.a, self.b, self.c
+        
+        # for loop covers the cases, where p is not above the triangle
+        for x, y in [[a, b], [b, c], [c, a]]:
+            if p.on_left(x, y):    
+                line = Line(x, y)
+                return line.closest_point(p)
+
+        r = b - a
+        s = c - a
+        # https://math.stackexchange.com/questions/305642/how-to-find-surface-normal-of-a-triangle
+        n = r.cross3d(s)
+        n.normalize()
+        
+        pz = -(n.x * (p.x - a.x) + n.y * (p.y - a.y)) / n.z + a.z
+        return Vector(p.x, p.y, pz)
