@@ -1,4 +1,4 @@
-from Vector import Vector, Line, Triangle
+#from Vector import Vector, Line, Triangle
 
 class Vertex(object):
     def __init__(self, position, id=0):
@@ -141,11 +141,11 @@ class Graph:
 
         if len(projected_points) == 0:
             return None
-        proj, edge, dist = min(projected_points, key=lambda a:a[1])
+        proj, edge, dist = min(projected_points, key=lambda a: a[1])
         v1, v2, v3 = edge.origin, edge.other, edge.inv.right.other
         
         # insert vertex
-        center_vertex = self.add_vertex(pos)
+        center_vertex = self.add_vertex(proj)
         self.add_edge(v1.id, center_vertex.id, True, True)
         self.add_edge(v2.id, center_vertex.id, True, True)
         self.add_edge(v3.id, center_vertex.id, True, True)

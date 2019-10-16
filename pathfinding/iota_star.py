@@ -4,7 +4,13 @@ import bmesh
 import mathutils
 import math
 import time
+
+sys.path.append(r'D:\code_snippets\Snippets\pathfinding')
+
+import vector
 import graph as IOTA
+import importlib
+importlib.reload(IOTA)
 
 def vis_path(path):
     bm = bmesh.new()
@@ -17,15 +23,13 @@ def vis_path(path):
             bm.edges.new((bm.verts[i], bm.verts[i-1]))
     
     verts = [o for o in bmesh.ops.extrude_edge_only(bm, edges=bm.edges)['geom']
-                if isinstance(o, bmesh.types.BMVert)]
+             if isinstance(o, bmesh.types.BMVert)]
     for v in verts:
         v.co.z += 0.04
     ob = bpy.data.objects['path']
     bm.to_mesh(ob.data)
     bm.free()
     
-
-
 def reconstruct_path(v):
     path = [v]
     while v.previous != v:
@@ -215,9 +219,10 @@ def update(context):
     
     vis_path(path)
 
+def register():
+    update(bpy.context)
+    bpy.app.handlers.depsgraph_update_post.append(update)
 
-for h in bpy.app.handlers.depsgraph_update_post:
-    bpy.app.handlers.depsgraph_update_post.remove(h)
-bpy.app.handlers.depsgraph_update_post.append(update)
-
-update(bpy.context)
+def unregister():
+    for h in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(h)
