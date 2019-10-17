@@ -1,3 +1,5 @@
+import math
+
 class Vector(object):
     def __init__(self, x, y, z):
         self.x = x
@@ -17,41 +19,44 @@ class Vector(object):
             return self.y
         if key == 2:
             return self.z
-        raise IndexError("Points only support the indices 0, 1, 2.")
+        raise IndexError("Vectors only support the indices 0, 1, 2.")
+
+    def __str__(self):
+        return "[" + '{:4.1f}|{:4.1f}|{:4.1f}'.format(self.x, self.y, self.z) + "]"
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.z == other.z
 
     def __add__(self, other):
-        assert isinstance(other, Point)
-        return Point(self.x + other.x, self.y + other.y, self.z + other.z)
+        assert isinstance(other, Vector)
+        return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
     def __sub__(self, other):
-        assert isinstance(other, Point)
-        return Point(self.x - other.x, self.y - other.y, self.z - other.z)
+        assert isinstance(other, Vector)
+        return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __mul__(self, other):
         if isinstance(other, float) or isinstance(other, int):
-            return Point(self.x * other, self.y * other, self.z * other)
+            return Vector(self.x * other, self.y * other, self.z * other)
 
         # dot product
-        if isinstance(other, Point):
+        if isinstance(other, Vector):
             return self.x * other.x + self.y * other.y + self.z * other
 
         raise TypeError("Only float/int multiplication or a vector dot product make sense to me.")
         
     def __truediv__(self, n):
         assert isinstance(n, float) or isinstance(n, int)
-        return Point(self.x / n, self.y / n, self.z / n)
+        return Vector(self.x / n, self.y / n, self.z / n)
 
     def dot3d(self, other):
-        return self.x * other.x + self.y * other.y + self.z * other
+        return self.x * other.x + self.y * other.y + self.z * other.z
 
     def dot2d(self, other):
         return self.x * other.x + self.y * other.y
 
     def cross3d(self, other):
-        return Point(self.y * other.z - self.z * other.y,
+        return Vector(self.y * other.z - self.z * other.y,
                      self.z * other.x - self.x * other.z,
                      self.x * other.y - self.y * other.x)
     
@@ -59,11 +64,11 @@ class Vector(object):
         return self.x * other.y - self.y * other.x
 
     def on_left(self, a, b):
-        assert isinstance(a, Point) and isinstance(b, Point)
+        assert isinstance(a, Vector) and isinstance(b, Vector)
         return (b.x - a.x) * (self.y - a.y) - (b.y - a.y) * (self.x - a.x) > 0
 
     def in_angle(self, base, right, left):
-        return self.is_left(base, right) and not self.is_left(base, left)
+        return self.on_left(base, right) and not self.on_left(base, left)
 
     def length(self):
         return (self.x * self.x + self.y * self.y + self.z * self.z) ** 0.5
@@ -90,8 +95,8 @@ class Line(object):
         self.b = b
     def closest_point(self, p):
         ap = p - self.a
-        ab = p - self.b
-        t = ap.dot(ab) / ab.length2()
+        ab = self.b - self.a
+        t = ap.dot3d(ab) / ab.length2()
         t = min(1, max(0, t))
         return self.a + ab * t
 
@@ -108,9 +113,10 @@ class Triangle(object):
         
         # for loop covers the cases, where p is not above the triangle
         for x, y in [[a, b], [b, c], [c, a]]:
-            if p.on_left(x, y):    
+            if not p.on_left(x, y):
                 line = Line(x, y)
-                return line.closest_point(p)
+                p = line.closest_point(p)
+                return p
 
         r = b - a
         s = c - a
@@ -119,4 +125,5 @@ class Triangle(object):
         n.normalize()
         
         pz = -(n.x * (p.x - a.x) + n.y * (p.y - a.y)) / n.z + a.z
+        
         return Vector(p.x, p.y, pz)

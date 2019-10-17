@@ -1,5 +1,10 @@
 import sys
 sys.path.append("D:/code_snippets/Snippets/pathfinding")
+
+import vector
+import importlib
+importlib.reload(vector)
+
 from vector import Vector, Line, Triangle
 
 
@@ -28,7 +33,7 @@ class Vertex(object):
         for e in self.edges:
             if e.other == other:
                 return e.weight
-        raise Exception("not good")
+        raise Exception("not good") 
         
     def sort_edges(self):
         self.edges.sort(key=lambda edge: edge.angle)
@@ -52,7 +57,7 @@ class Vertex(object):
 
 class Edge(object):
     def __init__(self, origin, other, weight, angle, face_l, face_r):
-        assert isinstance(origin, Vector) and isinstance(other, Vector)
+        assert isinstance(origin, Vertex) and isinstance(other, Vertex)
         self.origin = origin
         self.other = other
         self.weight = weight
@@ -65,10 +70,10 @@ class Edge(object):
         self.right = None
     
     def has_face_l(self):
-        return self.face_l
+        return self._face_l
 
     def has_face_r(self):
-        return self.face_r
+        return self._face_r
     
     def __str__(self):
         return "[" + str(self.origin.id) + "->"+str(self.other.id)+"]"
@@ -81,7 +86,7 @@ class Edge(object):
         
         rxs = r.cross2d(s)
         if abs(rxs) < 0.000000001:
-            raise Exception("lines are collinear.", start.id, target.id, self.origin.id, self.other.id)
+            raise Exception("Lines are collinear.", start.id, target.id, self.origin.id, self.other.id)
         
         t = (start.position- self.origin.position).cross2d(s) / rxs
         pos = self.origin.position + (r * t)
@@ -118,10 +123,10 @@ class Graph:
         to = self.vert_list[to_id]
         
         if (cost < 0):
-            cost = (frm - to).length()
+            cost = (frm.position - to.position).length()
         
-        angle1 = (to - frm).angle2d()
-        angle2 = (frm - to).angle2d()
+        angle1 = (to.position - frm.position).angle2d()
+        angle2 = (frm.position - to.position).angle2d()
 
         edge_frm = frm.add_neighbor(to, cost, angle1, face_l, face_r)
         edge_to  = to.add_neighbor(frm, cost, angle2, face_r, face_l)
@@ -130,34 +135,41 @@ class Graph:
 
     def insert_point(self, pt):
         projected_points = []
+
         for v in self.vert_list:
-            if equals(v.position, pt):
+            if v.position == pt:
                 return v
             
-            if v.position.x <= pt.x:
-                for edge in v.edges:
-                    if edge.other.position.x > pt.x and edge.face_l:
-                        triangle = Triangle(v.position, edge.other.position, edge.left.other.position)
-                        projected = triangle.closest_point(pt)
-                        distance = (pt - projected).length2()
-                        projected_points.append([projected, edge, distance])
+            for edge in v.edges:
+                if edge.other.position.x > v.position.x and edge.has_face_l():
+                    triangle = Triangle(v.position, edge.other.position, edge.left.other.position)
+                    projected = triangle.closest_point(pt)
+                    distance = (pt - projected).length2()
+                    projected_points.append([projected, edge, distance])
 
         if len(projected_points) == 0:
             return None
-        proj, edge, dist = min(projected_points, key=lambda a: a[1])
-        v1, v2, v3 = edge.origin, edge.other, edge.inv.right.other
+        proj, edge, dist = min(projected_points, key=lambda a: a[2])
+
+        if edge.origin.position == proj:
+            return edge.origin
+        if edge.other.position == proj:
+            return edge.other
+        if edge.left.other.position == proj:
+            return edge.left.other
         
+
+        v1, v2, v3 = edge.origin, edge.other, edge.inv.right.other
         # insert vertex
         center_vertex = self.add_vertex(proj)
         self.add_edge(v1.id, center_vertex.id, True, True)
         self.add_edge(v2.id, center_vertex.id, True, True)
         self.add_edge(v3.id, center_vertex.id, True, True)
-        
         center_vertex.sort_edges()
         v1.sort_edges()
         v2.sort_edges()
         v3.sort_edges()
-        print("added vert", center_vertex, center_vertex.position)
+        print("Inserted vertex", center_vertex, center_vertex.position)
         
         return center_vertex
                 

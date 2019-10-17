@@ -7,8 +7,12 @@ import time
 
 import sys
 sys.path.append("D:/code_snippets/Snippets/pathfinding")
-from vector import Vector
+import importlib
+import vector
 import graph as IOTA
+importlib.reload(vector)
+importlib.reload(IOTA)
+from vector import Vector
 
 def vis_path(path):
     bm = bmesh.new()
@@ -29,7 +33,9 @@ def vis_path(path):
     bm.free()
     
 def reconstruct_path(v):
+    print("Reconstructing")
     path = [v]
+    
     while v.previous != v:
         intersections = line_of_sight_intersections(v, v.previous)
         path.extend(intersections)
@@ -45,6 +51,7 @@ def get_visible(start):
         currentNode = openList.pop(0)
         closedList.append(currentNode)
         
+        if len(openList) > 50: return
         for edge in currentNode.edges:
             v = edge.other
             if v not in closedList and v not in openList:
@@ -54,11 +61,12 @@ def get_visible(start):
     return closedList
 
 def iota_star(start, target):
+    print("Starting IOTA.")
     openList = [start]
     closedList = []
     
     start.g = 0
-    start.calc_h(target)
+    start.h = (target.position - start.position).length()
     start.f = start.g + start.h
     start.previous = start
     
@@ -66,7 +74,7 @@ def iota_star(start, target):
     if line_of_sight(start, target):
         target.previous = start
         return reconstruct_path(target)
-    
+        
     while len(openList):
         openList.sort(key=lambda v: v.f)
         currentNode = openList.pop(0)
@@ -80,7 +88,6 @@ def iota_star(start, target):
             print("Reached target", target)
             return reconstruct_path(target)
         
-        
         added = []
         
         for v in visible:
@@ -91,10 +98,12 @@ def iota_star(start, target):
             for e in v.edges:
                 if e.other not in closedList:
                     if e.other not in visible:
-                        on_left_side = is_left(currentNode.position, v.position, e.other.position)
-                        if not e.has_face(on_left_side):
-                            connect = True
-                            break
+                        on_left_side = e.other.position.on_left(currentNode.position,
+                                                                v.position)
+                        if ((on_left_side and not e.has_face_l())
+                            or (not on_left_side and not e.has_face_r())):
+                                connect = True
+                                break
             if v == target:
                 connect = True
                 
@@ -102,7 +111,7 @@ def iota_star(start, target):
                 closedList.append(v)
             if connect:
                 if v not in openList:
-                    v.calc_h(target)
+                    v.h = (target.position - v.position).length()
                     v.g = sys.maxsize
                     v.f = sys.maxsize
                     v.previous = None
@@ -115,20 +124,20 @@ def iota_star(start, target):
                     v.g = currentNode.g + dist
                     v.f = v.g + v.h
                
-        for v in added:
-            print("   ", v, v.previous,  "{:.2f}".format(v.g), "{:.2f}".format(v.f))
+        #for v in added:
+        #    print("   ", v, v.previous,  "{:.2f}".format(v.g), "{:.2f}".format(v.f))
     return None
 
 def line_of_sight(a, b):
     edge1 = None
     for edge in a.edges:
-        if edge.left:
-            if in_angle(a.position, edge.other.position, edge.left.other.position, b.position):
+        if edge.has_face_l():
+            if b.position.in_angle(a.position, edge.other.position, edge.left.other.position):
                 edge1 = edge.inv.right
                 break
     
     if edge1 == None: return False
-
+    
     res, el = get_collision_from_edge(edge1, a, b)
     while res:
         res, el = get_collision_from_edge(el, a, b)
@@ -140,8 +149,8 @@ def line_of_sight_intersections(a, b):
     for edge in a.edges:
         if edge.other == b:
             return []
-        if edge.left:
-            if in_angle(a.position, edge.other.position, edge.left.other.position, b.position):
+        if edge.has_face_l():
+            if b.position.in_angle(a.position, edge.other.position, edge.left.other.position):
                 edge1 = edge.inv.right
     if edge1 == None:
         raise Exception("expected possible path")
@@ -156,13 +165,13 @@ def line_of_sight_intersections(a, b):
     return intersections
     
 def get_collision_from_edge(edge, start, target):
-    if not edge.right:
+    if not edge.has_face_r():
         return False, None
     
     if edge.right.other == target:
         return False, target
     
-    if is_left(start.position, target.position, edge.right.other.position):
+    if edge.right.other.position.on_left(start.position, target.position):
         return True, edge.right
     else: # is_right
         return True, edge.right.inv.right
@@ -207,19 +216,20 @@ def update(context):
     # get start and target
     start_v = bpy.data.objects['start'].location
     target_v = bpy.data.objects['target'].location
+
+    start = g.insert_point(Vector(*start_v))
+    target = g.insert_point(Vector(*target_v))
     
-    start = g.insert_point(tuple(start_v))
-    target = g.insert_point(tuple(target_v))
-    
-    
+
     # calculate path
     path = iota_star(start, target)
-    
+
     vis_path(path)
 
+
+update(bpy.context)
 
 for h in bpy.app.handlers.depsgraph_update_post:
     bpy.app.handlers.depsgraph_update_post.remove(h)
 
-update(bpy.context)
 bpy.app.handlers.depsgraph_update_post.append(update)
