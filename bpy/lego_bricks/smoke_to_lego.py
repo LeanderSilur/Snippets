@@ -57,7 +57,7 @@ max_grid = np.ones(grid.shape, dtype=np.float)[::9, ::3, ::3] * 0.065
 
 
 brick_1 = Brick('brick_1')
-brick_1.kernel = np.array([[[1, 1, 1]]]) / 8
+brick_1.kernel = np.array([[[1, 1, 1]]]) / 17
 brick_1.kernel = np.repeat(np.repeat(brick_1.kernel, 9, axis=0), 3, axis=1)
 brick1_grid = scipy.ndimage.convolve(grid, brick_1.kernel)[::9, ::3, ::3]
 
