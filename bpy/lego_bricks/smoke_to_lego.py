@@ -33,72 +33,89 @@ class Brick(object):
                         for f in faces:
                             f.material_index = mat
 
+def generate_lego_geometry():
 
-depsgraph = bpy.context.evaluated_depsgraph_get()
-smoke_obj = bpy.data.objects['domain'].evaluated_get(depsgraph)
-smoke_domain_mod = smoke_obj.modifiers[0]
-settings = smoke_domain_mod.domain_settings
-grid = settings.density_grid
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    smoke_obj = bpy.data.objects['domain'].evaluated_get(depsgraph)
+    smoke_domain_mod = smoke_obj.modifiers[0]
+    settings = smoke_domain_mod.domain_settings
+    grid = settings.density_grid
 
-dimensions = np.flip(np.array(smoke_obj.dimensions))
-samples_smoke = dimensions / np.max(dimensions) * settings.resolution_max
-samples_smoke = np.floor(samples_smoke)
-samples_lego = dimensions / np.array([0.0032, 0.008, 0.008])
-samples_lego = np.floor(samples_lego)
+    dimensions = np.flip(np.array(smoke_obj.dimensions))
+    samples_smoke = dimensions / np.max(dimensions) * settings.resolution_max
+    samples_smoke = np.floor(samples_smoke)
+    samples_lego = dimensions / np.array([0.0032, 0.008, 0.008])
+    samples_lego = np.floor(samples_lego)
 
-zoom_factor = samples_lego / samples_smoke * 3
-
-
-grid = np.array(grid).reshape(samples_smoke.astype(int))
-grid = scipy.ndimage.zoom(grid, zoom_factor, order=1)
-
-density_grid = scipy.ndimage.convolve(grid, np.ones((9, 6, 6)))[::9, ::3, ::3]
-max_grid = np.ones(grid.shape, dtype=np.float)[::9, ::3, ::3] * 0.065
+    zoom_factor = samples_lego / samples_smoke * 3
 
 
-brick_1 = Brick('brick_1')
-brick_1.kernel = np.array([[[1, 1, 1]]]) / 17
-brick_1.kernel = np.repeat(np.repeat(brick_1.kernel, 9, axis=0), 3, axis=1)
-brick1_grid = scipy.ndimage.convolve(grid, brick_1.kernel)[::9, ::3, ::3]
+    grid = np.array(grid).reshape(samples_smoke.astype(int))
+    grid = scipy.ndimage.zoom(grid, zoom_factor, order=1)
 
-brick2a = Brick('brick_2a')
-brick2a.kernel = np.array([[[-6, -6, -1, 0, 1, 1]],
-                           [[-6, -5, 0, 1, 1, 1]],
-                           [[-5, -3, 0, 1, 1, 1]],
-                           [[-4, -1, 0, 1, 1, 1]],
-                           [[-3, 1, 0, 1, 1, 1]],
-                           [[-2, 0, 1, 1, 1, 1]],
-                           [[-1, 0, 1, 1, 1, 1]],
-                           [[1, 3, 1, 1, 1, 1]],
-                           [[3, 3, 1, 1, 1, 1]]
-                           ]) / 84
-brick2a.kernel = np.repeat(brick2a.kernel, 3, axis=1)
-brick2a_grid = scipy.ndimage.convolve(grid, brick2a.kernel)[::9, ::3, ::3]
+    density_grid = scipy.ndimage.convolve(grid, np.ones((9, 6, 6)))[::9, ::3, ::3]
+    max_grid = np.ones(grid.shape, dtype=np.float)[::9, ::3, ::3] * 0.065
 
-brick2b = Brick('brick_2b')
-brick2b.kernel = np.flip(brick2a.kernel, axis=2)
-brick2b_grid = scipy.ndimage.convolve(grid, brick2b.kernel)[::9, ::3, ::3]
 
-brick2c = Brick('brick_2c')
-brick2c.kernel = np.swapaxes(brick2a.kernel, 1, 2)
-brick2c_grid = scipy.ndimage.convolve(grid, brick2c.kernel)[::9, ::3, ::3]
+    brick_1 = Brick('brick_1')
+    brick_1.kernel = np.array([[[1, 1, 1]]]) / 17
+    brick_1.kernel = np.repeat(np.repeat(brick_1.kernel, 9, axis=0), 3, axis=1)
+    brick1_grid = scipy.ndimage.convolve(grid, brick_1.kernel)[::9, ::3, ::3]
 
-brick2d = Brick('brick_2d')
-brick2d.kernel = np.swapaxes(brick2b.kernel, 1, 2)
-brick2d_grid = scipy.ndimage.convolve(grid, brick2d.kernel)[::9, ::3, ::3]
+    brick2a = Brick('brick_2a')
+    brick2a.kernel = np.array([[[-6, -6, -1, 0, 1, 1]],
+                               [[-6, -5, 0, 1, 1, 1]],
+                               [[-5, -3, 0, 1, 1, 1]],
+                               [[-4, -1, 0, 1, 1, 1]],
+                               [[-3, 1, 0, 1, 1, 1]],
+                               [[-2, 0, 1, 1, 1, 1]],
+                               [[-1, 0, 1, 1, 1, 1]],
+                               [[1, 3, 1, 1, 1, 1]],
+                               [[3, 3, 1, 1, 1, 1]]
+                               ]) / 84
+    brick2a.kernel = np.repeat(brick2a.kernel, 3, axis=1)
+    brick2a_grid = scipy.ndimage.convolve(grid, brick2a.kernel)[::9, ::3, ::3]
 
-max_grid = np.maximum(max_grid, brick1_grid)
-max_grid = np.maximum(max_grid, brick2a_grid)
-max_grid = np.maximum(max_grid, brick2b_grid)
-max_grid = np.maximum(max_grid, brick2c_grid)
-max_grid = np.maximum(max_grid, brick2d_grid)
+    brick2b = Brick('brick_2b')
+    brick2b.kernel = np.flip(brick2a.kernel, axis=2)
+    brick2b_grid = scipy.ndimage.convolve(grid, brick2b.kernel)[::9, ::3, ::3]
 
-bm = bmesh.new()
-brick_1.place(bm, brick1_grid == max_grid, density_grid)
-brick2a.place(bm, brick2a_grid == max_grid, density_grid)
-brick2b.place(bm, brick2b_grid == max_grid, density_grid)
-brick2c.place(bm, brick2c_grid == max_grid, density_grid)
-brick2d.place(bm, brick2d_grid == max_grid, density_grid)
+    brick2c = Brick('brick_2c')
+    brick2c.kernel = np.swapaxes(brick2a.kernel, 1, 2)
+    brick2c_grid = scipy.ndimage.convolve(grid, brick2c.kernel)[::9, ::3, ::3]
 
-bm.to_mesh(bpy.data.objects['result'].data)
-bm.free()
+    brick2d = Brick('brick_2d')
+    brick2d.kernel = np.swapaxes(brick2b.kernel, 1, 2)
+    brick2d_grid = scipy.ndimage.convolve(grid, brick2d.kernel)[::9, ::3, ::3]
+
+    max_grid = np.maximum(max_grid, brick1_grid)
+    max_grid = np.maximum(max_grid, brick2a_grid)
+    max_grid = np.maximum(max_grid, brick2b_grid)
+    max_grid = np.maximum(max_grid, brick2c_grid)
+    max_grid = np.maximum(max_grid, brick2d_grid)
+
+    bm = bmesh.new()
+    brick_1.place(bm, brick1_grid == max_grid, density_grid)
+    brick2a.place(bm, brick2a_grid == max_grid, density_grid)
+    brick2b.place(bm, brick2b_grid == max_grid, density_grid)
+    brick2c.place(bm, brick2c_grid == max_grid, density_grid)
+    brick2d.place(bm, brick2d_grid == max_grid, density_grid)
+
+    bm.to_mesh(bpy.data.objects['result'].data)
+    bm.free()
+
+
+
+# call the method to generate the geometry for this current frame
+if True:
+    generate_lego_geometry()
+
+# loop through all the frame to render all frames
+# this will be slow and won't show visual feedback
+if False:
+    scn = bpy.context.scene
+    for frame in range(scn.frame_start, scn.frame_end + 1):
+        scn.frame_set(frame)
+        scn.render.filepath = "//output/" + str(frame).zfill(4) + ".png"
+        bpy.ops.render.render(animation=False, write_still=True)
+        
