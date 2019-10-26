@@ -116,6 +116,7 @@ if False:
     scn = bpy.context.scene
     for frame in range(scn.frame_start, scn.frame_end + 1):
         scn.frame_set(frame)
+        generate_lego_geometry()
         scn.render.filepath = "//output/" + str(frame).zfill(4) + ".png"
         bpy.ops.render.render(animation=False, write_still=True)
         
