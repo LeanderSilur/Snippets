@@ -2,3 +2,4 @@ ignore
 backup.blend
 *.blend[0-9]*
 .vscode/
+.gitignore
