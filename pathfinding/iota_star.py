@@ -51,7 +51,6 @@ def get_visible(start):
         currentNode = openList.pop(0)
         closedList.append(currentNode)
         
-        if len(openList) > 50: return
         for edge in currentNode.edges:
             v = edge.other
             if v not in closedList and v not in openList:
