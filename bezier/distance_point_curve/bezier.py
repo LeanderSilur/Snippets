@@ -31,7 +31,7 @@ class Bezier(object):
     # points.
     def create_coefficients(self):
         co_coeffs = np.array([[-1, 3, -3, 1], [3, -6, 3, 0], [-3, 3, 0, 0], [1, 0, 0, 0]], dtype=np.float32)
-        coeffs = np.multiply(co_coeffs.reshape((4, 4, 1)), points.reshape((1, 4, 2)))
+        coeffs = np.multiply(co_coeffs.reshape((4, 4, 1)), self.points.reshape((1, 4, 2)))
         self.coeffs = np.sum(coeffs, axis=1).reshape(-1, 4, 2)
 
 
@@ -94,7 +94,6 @@ class Bezier(object):
         # derivativ of the distance function.
         extrema = Bezier.np_real_roots(dcoeffs)
         # Remove the roots which are out of bounds of the clipped range [0, 1].
-        # [future reference] https://stackoverflow.com/questions/47100903/deleting-every-3rd-element-of-a-tensor-in-tensorflow
         dd_clip = (np.sum(ddcoeffs * np.power(extrema, self.exp4)) >= 0) & (extrema > 0) & (extrema < 1)
         minima = extrema[dd_clip]
 
@@ -109,110 +108,10 @@ class Bezier(object):
 
         return points, distances, index
 
-
-    # Point the curve to a matplotlib figure.
-    # maxes         ... the axes of a matplotlib figure
-    def plot(self, maxes):
-        import matplotlib.path as mpath
-        import matplotlib.patches as mpatches
-        Path = mpath.Path
-        pp1 = mpatches.PathPatch(
-            Path(self.points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]),
-            fc="none")#, transform=ax.transData)
-        pp1.set_alpha(1)
-        pp1.set_color('#00cc00')
-        pp1.set_fill(False)
-        pp2 = mpatches.PathPatch(
-            Path(self.points, [Path.MOVETO, Path.LINETO , Path.LINETO , Path.LINETO]),
-            fc="none")#, transform=ax.transData)
-        pp2.set_alpha(0.2)
-        pp2.set_color('#666666')
-        pp2.set_fill(False)
-
-        maxes.scatter(*zip(*self.points), s=4, c=((0, 0.8, 1, 1), (0, 1, 0.5, 0.8), (0, 1, 0.5, 0.8),
-                                                  (0, 0.8, 1, 1)))
-        maxes.add_patch(pp2)
-        maxes.add_patch(pp1)
-
     # Wrapper around np.roots, but only returning real
     # roots and ignoring imaginary results.
     @staticmethod
-    def np_real_roots(self, coefficients, EPSILON=1e-6):
+    def np_real_roots(coefficients, EPSILON=1e-6):
         r = np.roots(coefficients)
         return r.real[abs(r.imag) < EPSILON]
 
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    import math
-    def matplotlib_example(bez, use_text):
-        import matplotlib.pyplot as plt
-        import matplotlib.path as mpath
-        import matplotlib.patches as mpatches
-        
-        def onclick(event):
-            if event.inaxes == None:return
-            pt = np.array((event.xdata, event.ydata), dtype=np.float)
-            print("pt", pt)
-            points, distances, index = bez.measure_distance(pt)
-            closest = points[index]
-            distance = math.floor(distances[index])
-
-            Path = mpath.Path
-            pp1 = mpatches.PathPatch(Path([pt, closest], [Path.MOVETO, Path.LINETO]), fc="none")
-            pp1.set_color("#95a7df")
-            ax.add_patch(pp1)
-            ax.scatter(*pt, s=32, facecolors='none', edgecolors='b')
-
-            if use_text:
-                ax.text(*((pt+closest)/2), str(distance))
-                ax.text(*pt, str(pt.astype(np.int)))
-                ax.text(*closest, str(closest.astype(np.int)))
-
-            fig.canvas.draw()
-            return None
-
-        fig, ax = plt.subplots()
-        cid = fig.canvas.mpl_connect('button_press_event', onclick)
-
-        ax.grid()
-        ax.axis('equal')
-        ax.margins(0.4)
-        bez.plot(ax)
-        plt.title("Click next to the curve.")
-        plt.show()
-
-    def opencv_example(bez, shape, fac = 3):
-
-        img = np.zeros(shape, dtype=np.float)
-        for y in range(img.shape[0]):
-            for x in range(img.shape[1]):
-                img[y, x] = bez.distance2((x, y))
-            print(y, "/", shape[0])
-
-        import cv2
-        img = np.power(img, 1/3)
-        img = ((1-(img / np.max(img)))*255).astype(np.uint8)    
-        img = np.flip(img, axis=0)
-        resized_image = cv2.resize(img, (shape[1]*fac, shape[0]*fac), interpolation=cv2.INTER_NEAREST)
-        cv2.imshow("distance", resized_image)
-        cv2.waitKey(1)
-
-
-
-
-
-if __name__ == '__main__':
-    # Create a Bezier object with four control points.
-    points = np.array([[0, 0], [0, 1], [1,.8], [1.5,1]]).astype(np.float32)
-    points *= 50
-    points += 10
-    bez = Bezier(points)
-    
-    opencv_example(bez, shape = (80, 110))
-    matplotlib_example(bez, use_text = False)
