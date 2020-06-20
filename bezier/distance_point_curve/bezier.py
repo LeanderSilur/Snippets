@@ -153,81 +153,81 @@ class Bezier(object):
         dt_5 = 6 * np.sum(a * a)
         dt_5 = 6 * np.sum(a * a)
 
-+ 10 a b t^4
-+ 8 a c t^3
-+ 4 b^2 t^3
+# + 10 a b t^4
+# + 8 a c t^3
+# + 4 b^2 t^3
 
-+ 6 a d t^2
-+ 6 b c t^2
-- 6 a p t^2
-- 6 a q r t^2
+# + 6 a d t^2
+# + 6 b c t^2
+# - 6 a p t^2
+# - 6 a q r t^2
 
- + 4 b d t
- - 4 b p t
- - 4 b q r t
- + 2 c^2 t
- + 2 c d
- - 2 c p
- - 2 c q r
+#  + 4 b d t
+#  - 4 b p t
+#  - 4 b q r t
+#  + 2 c^2 t
+#  + 2 c d
+#  - 2 c p
+#  - 2 c q r
 
-        return [1, 2]
-        points, distances = self.measure_distance(pt)
-        index = np.argmin(distances)
-        return points[index]
-
-
-
-
-    # Wrapper around np.roots, but only returning real
-    # roots and ignoring imaginary results.
-    @staticmethod
-    def np_real_roots(coefficients, EPSILON=1e-6):
-        r = np.roots(coefficients)
-        return r.real[abs(r.imag) < EPSILON]
+#         return [1, 2]
+#         points, distances = self.measure_distance(pt)
+#         index = np.argmin(distances)
+#         return points[index]
 
 
 
 
-import bpy
-import mathutils
-def closest_point_to_line(pt, a, b):
-    ab = b-a
-    ab2 = np.linalg.norm(ab)
-    ap_dot_ab = np.dot(p-a, ab)
-    t = ap_dot_ab / ab2
-    return a + ab * t 
-
-# generate Bezier object from Blender curve named 'Curve'
-bezier_points = bpy.data.objects['Curve'].data.splines[0].bezier_points
-points = [
-    bezier_points[0].co,
-    bezier_points[0].handle_right,
-    bezier_points[1].handle_left,
-    bezier_points[1].co
-]
-points = np.array(points)
-bez = Bezier(points)
+#     # Wrapper around np.roots, but only returning real
+#     # roots and ignoring imaginary results.
+#     @staticmethod
+#     def np_real_roots(coefficients, EPSILON=1e-6):
+#         r = np.roots(coefficients)
+#         return r.real[abs(r.imag) < EPSILON]
 
 
-# calculate closest t-to-point from mesh-object named 'Point'
-point_ob = bpy.data.objects['Point']
-verts = point_ob.data.vertices
-pt = np.array(point_ob.matrix_world @ verts[0].co)
-closest = bez.closest(pt)
-verts[1].co = point_ob.matrix_world.inverted() @ mathutils.Vector(closest)
 
-# calculate closest t-to-line from mesh-object named 'Line'
-line_ob = bpy.data.objects['Line']
-verts = line_ob.data.vertices
-a = np.array(line_ob.matrix_world @ verts[0].co)
-b = np.array(line_ob.matrix_world @ verts[1].co)
 
-closest = bez.closest_to_line(a, b)
+# import bpy
+# import mathutils
+# def closest_point_to_line(pt, a, b):
+#     ab = b-a
+#     ab2 = np.linalg.norm(ab)
+#     ap_dot_ab = np.dot(p-a, ab)
+#     t = ap_dot_ab / ab2
+#     return a + ab * t 
 
-# # display it
-# line_ob = bpy.data.objects['Line_Vis']
+# # generate Bezier object from Blender curve named 'Curve'
+# bezier_points = bpy.data.objects['Curve'].data.splines[0].bezier_points
+# points = [
+#     bezier_points[0].co,
+#     bezier_points[0].handle_right,
+#     bezier_points[1].handle_left,
+#     bezier_points[1].co
+# ]
+# points = np.array(points)
+# bez = Bezier(points)
+
+
+# # calculate closest t-to-point from mesh-object named 'Point'
+# point_ob = bpy.data.objects['Point']
+# verts = point_ob.data.vertices
+# pt = np.array(point_ob.matrix_world @ verts[0].co)
+# closest = bez.closest(pt)
+# verts[1].co = point_ob.matrix_world.inverted() @ mathutils.Vector(closest)
+
+# # calculate closest t-to-line from mesh-object named 'Line'
+# line_ob = bpy.data.objects['Line']
 # verts = line_ob.data.vertices
 # a = np.array(line_ob.matrix_world @ verts[0].co)
 # b = np.array(line_ob.matrix_world @ verts[1].co)
-# verts[1].co = point_ob.matrix_world.inverted() @ mathutils.Vector(closest)
+
+# closest = bez.closest_to_line(a, b)
+
+# # # display it
+# # line_ob = bpy.data.objects['Line_Vis']
+# # verts = line_ob.data.vertices
+# # a = np.array(line_ob.matrix_world @ verts[0].co)
+# # b = np.array(line_ob.matrix_world @ verts[1].co)
+# # verts[1].co = point_ob.matrix_world.inverted() @ mathutils.Vector(closest)
 
